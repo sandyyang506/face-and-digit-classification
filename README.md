@@ -17,6 +17,8 @@ Install `uv`:
 git clone <repo-url>
 cd face-and-digit-classification
 uv sync
+curl -o data/data.zip http://rl.cs.rutgers.edu fall2019/data.zip
+unzip data/data.zip -d data/
 ```
 
 ### Run
