@@ -27,8 +27,8 @@ uv run python src/main.py
 ```
 
 ## Project Structure
+```
 src/          # Source code
 data/         # Raw test/train data
 graphs/       # Graph representation of experiment results
-```
 ```
