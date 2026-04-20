@@ -62,7 +62,7 @@ def load_labels(file_path):
 def get_dataset(data_type, split):
     base_path = "data/"
     
-    if data_type == 'digit':
+    if data_type == 'Digit':
         width = 28
         height = 20 
         folder = os.path.join(base_path, "digitdata")
