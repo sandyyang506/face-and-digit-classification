@@ -41,7 +41,10 @@ class PerceptronFacesClassifier:
         set during `train`.
         """
         # TODO: initialize self.weights (shape: rows x cols) and self.bias.
-        raise NotImplementedError
+        self.iterations = max_iterations
+        self.features = image_shape[0] * image_shape[1]
+        self.weights = np.zeros(self.features)
+        self.bias = 0.0
 
     def train(self, training_images: np.ndarray, training_labels: np.ndarray) -> None:
         """Fit the perceptron on training data.
@@ -49,18 +52,43 @@ class PerceptronFacesClassifier:
         `training_images` has shape (N, 70, 60). `training_labels` has
         shape (N,) with values in {0, 1}.
         """
-        # TODO: implement the binary perceptron update rule.
-        raise NotImplementedError
+        samples = training_images.shape[0]
+        imgs = training_images.reshape(samples, self.features)
+
+        for epoch in range(self.max_iterations):
+            for i in range(samples):
+                features = imgs[i]
+                actual = training_labels[i]
+
+                score = np.dot(self.weights, features) + self.bias
+                prediction = 1 if score >= 0 else 0
+
+                if prediction != actual:
+                    if actual == 1:
+                        self.weights += features
+                        self.bias += 1
+                    else:
+                        self.weights -= features
+                        self.bias -= 1
 
     def predict(self, image: np.ndarray) -> int:
         """Predict 0 or 1 for a single 70x60 image."""
-        # TODO: return 1 if w . x + b >= 0 else 0.
-        raise NotImplementedError
+    
+        img = image.flatten()
+        score = np.dot(self.weights, img) + self.bias
+        return 1 if score >= 0 else 0
 
     def evaluate(self, images: np.ndarray, labels: np.ndarray) -> float:
         """Return classification accuracy in [0, 1] over a batch."""
-        # TODO: loop over images, call self.predict, compare with labels.
-        raise NotImplementedError
+
+        correct = 0
+        samples = images.shape[0]
+        
+        for i in range(samples):
+            if self.predict(images[i]) == labels[i]:
+                correct += 1
+                
+        return float(correct/samples)
 
 
 def main(training_percent: int, num_iterations: int = 5) -> dict:
