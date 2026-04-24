@@ -1,7 +1,9 @@
 .venv/
 __pycache__/
 .DS_Store
-data/*
-!data/.gitkeep
-graphs/*
-!graphs/.gitkeep
+old-template/graphs/*
+!old-template/graphs/.gitkeep
+final-submission/digitdata/*
+!final-submission/digitdata/.gitkeep
+final-submission/facedata/*
+!final-submission/facedata/.gitkeep
