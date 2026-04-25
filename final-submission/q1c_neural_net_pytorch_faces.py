@@ -39,15 +39,16 @@ class PyTorchNeuralNetworkFaces(nn.Module):
                  hidden1_size: int = 128,
                  hidden2_size: int = 64,
                  output_size: int = 2):
-        """Construct `nn.Linear` and activation modules for each layer."""
         super().__init__()
-        # TODO: define self.fc1, self.fc2, self.fc3 and an activation.
-        raise NotImplementedError
+        self.fc1 = nn.Linear(input_size, hidden1_size)
+        self.fc2 = nn.Linear(hidden1_size, hidden2_size)
+        self.fc3 = nn.Linear(hidden2_size, output_size)
+        self.act = nn.ReLU()
 
     def forward(self, x: "torch.Tensor") -> "torch.Tensor":
-        """Forward pass returning raw logits of shape (N, 2)."""
-        # TODO: return self.fc3(act(self.fc2(act(self.fc1(x)))))
-        raise NotImplementedError
+        x = self.act(self.fc1(x))
+        x = self.act(self.fc2(x))
+        return self.fc3(x)
 
 
 class PyTorchFacesClassifier:
@@ -62,28 +63,44 @@ class PyTorchFacesClassifier:
         batch_size: int = 32,
         device: str | None = None,
     ):
-        """Build the module, the loss, and the optimiser."""
-        # TODO:
-        # self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        # self.model = PyTorchNeuralNetworkFaces(...).to(self.device)
-        # self.criterion = nn.CrossEntropyLoss()
-        # self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
-        raise NotImplementedError
+        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = PyTorchNeuralNetworkFaces(
+            hidden1_size=hidden1_size, hidden2_size=hidden2_size
+        ).to(self.device)
+        self.criterion = nn.CrossEntropyLoss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
+        self.num_epochs = num_epochs
+        self.batch_size = batch_size
 
     def train(self, training_images: np.ndarray, training_labels: np.ndarray) -> None:
-        """Fit the PyTorch model on the provided training data."""
-        # TODO: convert numpy to tensors, DataLoader, loop over epochs.
-        raise NotImplementedError
+        X = torch.from_numpy(flatten_images(training_images)).float().to(self.device)
+        y = torch.from_numpy(training_labels).long().to(self.device)
+        loader = DataLoader(TensorDataset(X, y),
+                            batch_size=self.batch_size, shuffle=True)
+
+        self.model.train()
+        for epoch in range(self.num_epochs):
+            for X_batch, y_batch in loader:
+                self.optimizer.zero_grad()
+                logits = self.model(X_batch)
+                loss = self.criterion(logits, y_batch)
+                loss.backward()
+                self.optimizer.step()
 
     def predict(self, image: np.ndarray) -> int:
-        """Predict 0 or 1 for a single 70x60 image."""
-        # TODO: flatten, tensor, forward, argmax, return int.
-        raise NotImplementedError
+        self.model.eval()
+        with torch.no_grad():
+            x = torch.from_numpy(image.flatten()).float().unsqueeze(0).to(self.device)
+            logits = self.model(x)
+            return int(torch.argmax(logits, dim=1).item())
 
     def evaluate(self, images: np.ndarray, labels: np.ndarray) -> float:
-        """Return classification accuracy on a batch of images."""
-        # TODO: vectorised eval in torch.no_grad() mode.
-        raise NotImplementedError
+        self.model.eval()
+        with torch.no_grad():
+            X = torch.from_numpy(flatten_images(images)).float().to(self.device)
+            logits = self.model(X)
+            preds = torch.argmax(logits, dim=1).cpu().numpy()
+        return float(np.mean(preds == labels))
 
 
 def main(training_percent: int, num_iterations: int = 5) -> dict:

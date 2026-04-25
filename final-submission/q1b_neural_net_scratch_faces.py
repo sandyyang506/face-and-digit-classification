@@ -45,39 +45,111 @@ class ScratchNeuralNetworkFaces:
         seed: int | None = None,
     ):
         """Initialise network hyperparameters and weight matrices."""
-        # TODO: initialize weights, biases, and hyperparameters.
-        raise NotImplementedError
+        if seed is not None:
+            np.random.seed(seed)
+
+        # using He init since hidden activation is ReLU
+        s1 = (2.0 / input_size) ** 0.5
+        s2 = (2.0 / hidden1_size) ** 0.5
+        s3 = (2.0 / hidden2_size) ** 0.5
+
+        self.W1 = np.random.randn(input_size, hidden1_size) * s1
+        self.b1 = np.zeros(hidden1_size)
+        self.W2 = np.random.randn(hidden1_size, hidden2_size) * s2
+        self.b2 = np.zeros(hidden2_size)
+        self.W3 = np.random.randn(hidden2_size, output_size) * s3
+        self.b3 = np.zeros(output_size)
+
+        self.output_size = output_size
+        self.learning_rate = learning_rate
+        self.num_epochs = num_epochs
+        self.batch_size = batch_size
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         """Forward pass. See `ScratchNeuralNetworkDigits.forward`."""
-        # TODO: 3 linear layers with hidden activations; final softmax
-        # (or sigmoid if output_size == 1). Cache intermediates.
-        raise NotImplementedError
+        self.z1 = X.dot(self.W1) + self.b1
+        self.a1 = np.maximum(self.z1, 0)
+
+        self.z2 = self.a1.dot(self.W2) + self.b2
+        self.a2 = np.maximum(self.z2, 0)
+
+        self.z3 = self.a2.dot(self.W3) + self.b3
+
+        # subtract max for numerical stability
+        z = self.z3 - self.z3.max(axis=1, keepdims=True)
+        exp_z = np.exp(z)
+        self.probs = exp_z / exp_z.sum(axis=1, keepdims=True)
+        return self.probs
 
     def backward(self, X: np.ndarray, y_onehot: np.ndarray) -> dict:
         """Back propagate loss gradients through the network."""
-        # TODO: compute dW1, db1, dW2, db2, dW3, db3 via the chain rule.
-        raise NotImplementedError
+        n = X.shape[0]
+
+        # softmax + cross entropy gradient simplifies to (probs - y)
+        dz3 = (self.probs - y_onehot) / n
+        dW3 = self.a2.T.dot(dz3)
+        db3 = dz3.sum(axis=0)
+
+        da2 = dz3.dot(self.W3.T)
+        dz2 = da2 * (self.z2 > 0)
+        dW2 = self.a1.T.dot(dz2)
+        db2 = dz2.sum(axis=0)
+
+        da1 = dz2.dot(self.W2.T)
+        dz1 = da1 * (self.z1 > 0)
+        dW1 = X.T.dot(dz1)
+        db1 = dz1.sum(axis=0)
+
+        return {
+            "dW1": dW1, "dW2": dW2, "dW3": dW3,
+            "db1": db1, "db2": db2, "db3": db3,
+        }
 
     def update_weights(self, grads: dict) -> None:
         """Apply one gradient descent step using `grads` from `backward`."""
-        # TODO: SGD update with self.learning_rate.
-        raise NotImplementedError
+        lr = self.learning_rate
+        self.W1 -= lr * grads["dW1"]
+        self.b1 -= lr * grads["db1"]
+        self.W2 -= lr * grads["dW2"]
+        self.b2 -= lr * grads["db2"]
+        self.W3 -= lr * grads["dW3"]
+        self.b3 -= lr * grads["db3"]
 
     def train(self, training_images: np.ndarray, training_labels: np.ndarray) -> None:
         """Full training loop: epochs and mini batches."""
-        # TODO: flatten, one hot encode labels, epoch and mini batch loop.
-        raise NotImplementedError
+        X = flatten_images(training_images)
+        y = training_labels
+        n = len(X)
+
+        for epoch in range(self.num_epochs):
+            # reshuffle every epoch
+            order = np.random.permutation(n)
+
+            for start in range(0, n, self.batch_size):
+                idx = order[start:start + self.batch_size]
+                xb = X[idx]
+                yb = y[idx]
+
+                # one hot encode this batch
+                yhot = np.zeros((len(idx), self.output_size))
+                yhot[np.arange(len(idx)), yb] = 1
+
+                self.forward(xb)
+                grads = self.backward(xb, yhot)
+                self.update_weights(grads)
 
     def predict(self, image: np.ndarray) -> int:
         """Predict 0 or 1 for a single 70x60 image."""
-        # TODO: flatten, run forward, argmax (or threshold).
-        raise NotImplementedError
+        x = image.flatten().reshape(1, -1)
+        probs = self.forward(x)
+        return int(probs.argmax())
 
     def evaluate(self, images: np.ndarray, labels: np.ndarray) -> float:
         """Return classification accuracy on a batch of images."""
-        # TODO: vectorised forward pass, argmax, compare.
-        raise NotImplementedError
+        X = flatten_images(images)
+        probs = self.forward(X)
+        preds = probs.argmax(axis=1)
+        return float((preds == labels).mean())
 
 
 def main(training_percent: int, num_iterations: int = 5) -> dict:

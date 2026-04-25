@@ -1,8 +1,15 @@
 .venv/
 __pycache__/
 .DS_Store
+
+# Unzipped image data lives in these dirs but the data.zip is the source of truth.
+old-template/data/digitdata/*
+!old-template/data/digitdata/.gitkeep
+old-template/data/facedata/*
+!old-template/data/facedata/.gitkeep
 old-template/graphs/*
 !old-template/graphs/.gitkeep
+
 final-submission/digitdata/*
 !final-submission/digitdata/.gitkeep
 final-submission/facedata/*
