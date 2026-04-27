@@ -20,6 +20,8 @@ import json
 import sys
 
 import numpy as np
+import matplotlib.pyplot as plt
+import os
 
 # Import each classifier module's main() once it has been implemented.
 # If you have not implemented a file yet, comment out the matching line.
@@ -42,7 +44,6 @@ EXPERIMENTS = {
 
 TRAINING_FRACTIONS = list(range(10, 101, 10))
 
-
 def run(which: list[str], iters: int) -> dict:
     """Run the selected experiments and return a results dict."""
     results: dict[str, list[dict]] = {}
@@ -56,6 +57,43 @@ def run(which: list[str], iters: int) -> dict:
             stats = EXPERIMENTS[name](pct, num_iterations=iters)
             results[name].append(stats)
     return results
+
+def plot(results):
+    if not os.path.exists('graphs'):
+        os.makedirs('graphs')
+
+    for exp, stats in results.items():
+    
+        res = {
+            "percent": [s["training_percent"] for s in stats],
+            "mean_acc": [s["mean_accuracy"] for s in stats],
+            "std_acc": [s["std_accuracy"] for s in stats],
+            "mean_time": [s["mean_train_time"] for s in stats]
+        }
+
+        parts = exp.split('_')
+        model_name = parts[0].capitalize()
+        data_type = parts[1]
+
+        # Accuracy Graph
+        plt.figure(figsize=(8, 5))
+        plt.errorbar(res["percent"], res["mean_acc"], yerr=res["std_acc"], fmt='-o', capsize=5)
+        plt.title(f"{model_name} {data_type.capitalize()} Accuracy Graph")
+        plt.xlabel("Training Size %")
+        plt.ylabel("Accuracy")
+        plt.grid(True)
+        plt.savefig(f"graphs/{exp}_accuracy.png")
+        plt.close()
+
+        # Time Graph
+        plt.figure(figsize=(8, 5))
+        plt.plot(res["percent"], res["mean_time"], '-o', color='orange')
+        plt.title(f"{model_name} {data_type.capitalize()} Training Time Graph")
+        plt.xlabel("Training Size %")
+        plt.ylabel("Seconds")
+        plt.grid(True)
+        plt.savefig(f"graphs/{exp}_time.png")
+        plt.close()
 
 
 def main():
@@ -74,6 +112,7 @@ def main():
     args = parser.parse_args()
 
     results = run(args.which, args.iters)
+    plot(results)
 
     if args.out:
         with open(args.out, "w") as fp:

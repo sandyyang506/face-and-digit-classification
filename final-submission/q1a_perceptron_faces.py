@@ -40,7 +40,6 @@ class PerceptronFacesClassifier:
         `max_iterations` is the number of full passes over the training
         set during `train`.
         """
-        # TODO: initialize self.weights (shape: rows x cols) and self.bias.
         self.iterations = max_iterations
         self.features = image_shape[0] * image_shape[1]
         self.weights = np.zeros(self.features)
@@ -55,7 +54,7 @@ class PerceptronFacesClassifier:
         samples = training_images.shape[0]
         imgs = training_images.reshape(samples, self.features)
 
-        for epoch in range(self.max_iterations):
+        for epoch in range(self.iterations):
             for i in range(samples):
                 features = imgs[i]
                 actual = training_labels[i]

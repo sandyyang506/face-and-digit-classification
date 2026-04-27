@@ -7,3 +7,4 @@ final-submission/digitdata/*
 !final-submission/digitdata/.gitkeep
 final-submission/facedata/*
 !final-submission/facedata/.gitkeep
+final-submission/graphs/*

@@ -58,7 +58,7 @@ class PerceptronDigitsClassifier:
         samples = training_images.shape[0]
         imgs = training_images.reshape(samples, self.features)
 
-        for epoch in range(self.max_iterations):
+        for epoch in range(self.iterations):
           for i in range(samples):
             features = imgs[i]
             actual = training_labels[i]
