@@ -43,7 +43,7 @@ class PerceptronDigitsClassifier:
         passes over the training set during `train`.
         """
     
-        self.max_iterations = max_iterations
+        self.iterations = max_iterations
         self.features = image_shape[0] * image_shape[1]
 
         self.weights = np.zeros((num_classes, self.features))
